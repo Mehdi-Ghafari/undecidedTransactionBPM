@@ -533,7 +533,7 @@ def lastFile(fn):
 if __name__ == '__main__':
 
     loadConfigFile()
-    try_main()
+    # try_main()
 
     try:
         __confiFileName__ = os.path.abspath('/cdgDir/configFile.ini')

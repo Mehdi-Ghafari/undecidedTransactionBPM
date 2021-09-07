@@ -12,59 +12,22 @@ from Logger import Logger
 import os
 from ftpsClass import connect_ftp
 import datetime
+import jdatetime
 
-# region Initial_Param
-prs = argparse.ArgumentParser(description='This Program Write For Undecided Transaction 780.ir co')
-
-prs.add_argument('cfg_file', action='store', help='configFile.ini path', default="cfgDir/configFile.ini")
-prs.add_argument('log_dir', action='store', help='log directory path', default="logDir/")
-prs.add_argument('arch_dir', action='store', help='archive create file directory path', default="archDir/")
-prs.add_argument('send_ftp', action='store', help='send ftp input [TRUE] or [FALSE] ?', default="FALSE")
-prs.add_argument('--debug', action='store_true', help='print debug messages to stderr')
-
-args = prs.parse_args()
-__level__ = logging.INFO
-__LOGDIR__ = os.path.abspath(args.log_dir)
-
-try:
-    __confiFileName__ = os.path.abspath(args.cfg_file)
-    __SendFTP__ = str(args.send_ftp)
-    __ARC__ = str(args.arch_dir)
-except:
-    print("Noting variable set")
-
-logMain = Logger(filename="main_init", level=__level__,
-                 dirname="File-" + os.path.basename(__file__), rootdir=__LOGDIR__)
-
-
-# endregion Initial_Param
-
-# region Function hunterCursor
-def chunks(cur):  # 65536
-    global log, d
-    while True:
-        # log.info('Chunk size %s' %  cur.arraysize, extra=d)
-        rows = cur.fetchmany()
-
-        if not rows: break;
-        yield rows
-
-
-# endregion Function hunterCursor
 
 # region Function mergeFile
-def mergeFile():
-    pathEN2 = os.path.abspath('780\EN\EN_581672031-14000613-1.txt')
-    pathENT = os.path.abspath('780\EN TARAKONESH\EN_581672031-14000613-2.txt')
-    pathOUT = os.path.abspath('780\OUT\outSAMPLE.txt')
+def mergeFile(fday, fmonth, fyear):
+    filename = str(jdatetime.datetime.fromgregorian(day=fday, month=fmonth, year=fyear).strftime("%Y%m%d"))
+
+    pathEN2 = os.path.abspath('780\EN\EN_581672031-' + filename + '-1.txt')
+    pathENT = os.path.abspath('780\EN TARAKONESH\EN_581672031-' + filename + '-2.txt')
+    pathOUT = os.path.abspath('780\OUT\EN_581672031-' + filename + '-1.txt')
 
     with open(pathEN2) as file1:
         txt1 = file1.read().splitlines()
-        print(txt1)
 
     with open(pathENT) as file2:
         txt2 = file2.read().splitlines()
-        print(txt2)
 
     with open(pathOUT, 'w') as new_file:
         new = ''
@@ -81,217 +44,6 @@ def mergeFile():
                         line_a.split("|")[7] + "|" +
                         line_a.split("|")[8] + "|" + line_a.split("|")[9] + "|" + line_a.split("|")[10]
                         + '\n')
-# endregion Function LoadFromView
-
-# region Function LoadFromView
-def loadFromView():
-    logloadFromView = Logger(filename="__init__", level=__level__,
-                             dirname="File-" + os.path.basename(
-                                 __file__) + "-Func-" + sys._getframe().f_code.co_name, rootdir=__LOGDIR__)
-
-    sqlViewPNA = """
-                    SELECT
-                        LOWER(DIAG) DIAG,
-                        PSP_BIN,
-                        TERMINAL,
-                        AUT_DATE,
-                        AMOUNT,
-                        TRACE,
-                        BIN_CARD,
-                        RPAD(PAN, 19, ' ') PAN,
-                        PROCCESS_CODE,
-                        DEVICE_TYPE,
-                        SPLIT_COLMN,
-                        STATUS,
-                        PKID,
-                        LOWER(FILENAME) FILENAME,
-                        FILEDATE,
-                        INSERTDATE,
-                        RRN_DWH,
-                        FILEMILADIDATE
-                    FROM
-                        TEHRAN_INTERNET.ACQ_INQ_780_WITH_RRN
-                    WHERE FILEDATE > :TEST
-                    
-            """
-
-    try:
-        # cursorPNA.execArgs(sqlViewPNA, V_MAX_FILEDATE, __LOGDIR__ + '/ORA')
-        # cursorPNA.execute(sqlViewPNA, {"V_PKID": V_MAX})
-        # cursorPNA.arraysize = 20
-        cursorPNA.execute(sqlViewPNA, test=V_MAX_FILEDATE)
-        recordsPNA = cursorPNA.fetchall()
-
-        try:
-            # No commit as you don-t need to commit DDL.
-            global Vn_DIAG
-            Vn_DIAG = [record[0] for record in recordsPNA] or ''
-
-            global Vn_PSP_BIN
-            Vn_PSP_BIN = [record[1] for record in recordsPNA] or ''
-
-            global Vn_TERMINAL
-            Vn_TERMINAL = [record[2] for record in recordsPNA] or ''
-
-            global Vn_AUT_DATE
-            Vn_AUT_DATE = [record[3] for record in recordsPNA] or ''
-
-            global Vn_AMOUNT
-            Vn_AMOUNT = [record[4] for record in recordsPNA] or ''
-
-            global Vn_TRACE
-            Vn_TRACE = [record[5] for record in recordsPNA] or ''
-
-            global Vn_BIN_CARD
-            Vn_BIN_CARD = [record[6] for record in recordsPNA] or ''
-
-            global Vn_PAN
-            Vn_PAN = [record[7] for record in recordsPNA] or ''
-
-            global Vn_PROCCESS_CODE
-            Vn_PROCCESS_CODE = [record[8] for record in recordsPNA] or ''
-
-            global Vn_DEVICE_TYPE
-            Vn_DEVICE_TYPE = [record[9] for record in recordsPNA] or ''
-
-            global Vn_SPLIT_COLMN
-            Vn_SPLIT_COLMN = [record[10] for record in recordsPNA] or ''
-
-            global Vn_STATUS
-            Vn_STATUS = [record[11] for record in recordsPNA] or ''
-
-            global Vn_PKID
-            Vn_PKID = [record[12] for record in recordsPNA] or ''
-
-            global Vn_FILENAME
-            Vn_FILENAME = [record[13] for record in recordsPNA] or ''
-
-            global Vn_FILEDATE
-            Vn_FILEDATE = [record[14] for record in recordsPNA] or ''
-
-            global Vn_INSERTDATE
-            Vn_INSERTDATE = [record[15] for record in recordsPNA] or ''
-
-            global Vn_RRN_DWH
-            Vn_RRN_DWH = [record[16] for record in recordsPNA] or ''
-
-            global Vn_FILEMILADIDATE
-            Vn_FILEMILADIDATE = [record[17] for record in recordsPNA] or ''
-
-            NewMaxFILEDATE(Vn_FILEDATE[0])
-
-            global listforIterable
-            listforIterable = zip(
-                Vn_DIAG,
-                Vn_PSP_BIN, Vn_TERMINAL, Vn_AUT_DATE, Vn_AMOUNT, Vn_TRACE,
-                Vn_BIN_CARD, Vn_PAN, Vn_PROCCESS_CODE, Vn_DEVICE_TYPE, Vn_SPLIT_COLMN, Vn_STATUS, Vn_PKID,
-                Vn_FILENAME, Vn_FILEDATE, Vn_INSERTDATE, Vn_RRN_DWH, Vn_FILEMILADIDATE)
-        # Ensure that we always disconnect from the database to avoid
-        # ORA-00018: Maximum number of sessions exceeded.
-        except IndexError as ex:
-            logloadFromView.error("ERROR MASSAGE: " + str(ex))
-
-        except (IOError, OSError):
-            logloadFromView.error("OS ERROR: " + str(OSError))
-            logloadFromView.error("OR OS IOError: " + str(IOError))
-
-        except cx_Oracle.DatabaseError as ex:
-            logloadFromView.warning("GENERAL ERROR DATABASE IN FUNCTION loadFromView")
-            logloadFromView.error("ERROR MASSAGE: " + str(ex))
-
-        except:
-            logloadFromView.error("UNEXPECTED ERROR FUNCTION loadFromView:" + str(sys.exc_info()[0]))
-
-    except Exception as e:
-        logloadFromView.error("DB ERROR: " + str(e))
-
-
-"""
-    global Vn_DIAG
-
-    for i, recordsPNA in enumerate(chunks(cursorPNA)):
-
-        try:
-            # No commit as you don-t need to commit DDL.
-            print(i)
-            Vn_DIAG[i] = [record[0] for record in recordsPNA] or ''
-            print(Vn_DIAG[i])
-
-            global Vn_PSP_BIN
-            Vn_PSP_BIN = [record[1] for record in recordsPNA] or ''
-
-            global Vn_TERMINAL
-            Vn_TERMINAL = [record[2] for record in recordsPNA] or ''
-
-            global Vn_AUT_DATE
-            Vn_AUT_DATE = [record[3] for record in recordsPNA] or ''
-
-            global Vn_AMOUNT
-            Vn_AMOUNT = [record[4] for record in recordsPNA] or ''
-
-            global Vn_TRACE
-            Vn_TRACE = [record[5] for record in recordsPNA] or ''
-
-            global Vn_BIN_CARD
-            Vn_BIN_CARD = [record[6] for record in recordsPNA] or ''
-
-            global Vn_PAN
-            Vn_PAN = [record[7] for record in recordsPNA] or ''
-
-            global Vn_PROCCESS_CODE
-            Vn_PROCCESS_CODE = [record[8] for record in recordsPNA] or ''
-
-            global Vn_DEVICE_TYPE
-            Vn_DEVICE_TYPE = [record[9] for record in recordsPNA] or ''
-
-            global Vn_SPLIT_COLMN
-            Vn_SPLIT_COLMN = [record[10] for record in recordsPNA] or ''
-
-            global Vn_STATUS
-            Vn_STATUS = [record[11] for record in recordsPNA] or ''
-
-            global Vn_PKID
-            Vn_PKID = [record[12] for record in recordsPNA] or ''
-
-            global Vn_FILENAME
-            Vn_FILENAME = [record[13] for record in recordsPNA] or ''
-
-            global Vn_FILEDATE
-            Vn_FILEDATE = [record[14] for record in recordsPNA] or ''
-
-            global Vn_INSERTDATE
-            Vn_INSERTDATE = [record[15] for record in recordsPNA] or ''
-
-            global Vn_RRN_DWH
-            Vn_RRN_DWH = [record[16] for record in recordsPNA] or ''
-
-            global Vn_FILEMILADIDATE
-            Vn_FILEMILADIDATE = [record[17] for record in recordsPNA] or ''
-
-            NewMaxFILEDATE(Vn_FILEDATE[0])
-
-            # global listforIterable
-            # listforIterable = zip(
-            #     Vn_DIAG,
-            #     Vn_PSP_BIN, Vn_TERMINAL, Vn_AUT_DATE, Vn_AMOUNT, Vn_TRACE,
-            #     Vn_BIN_CARD, Vn_PAN, Vn_PROCCESS_CODE, Vn_DEVICE_TYPE, Vn_SPLIT_COLMN, Vn_STATUS, Vn_PKID,
-            #     Vn_FILENAME, Vn_FILEDATE, Vn_INSERTDATE, Vn_RRN_DWH, Vn_FILEMILADIDATE)
-
-            # for i in listforIterable:
-            #     print(i)
-
-        # Ensure that we always disconnect from the database to avoid
-        # ORA-00018: Maximum number of sessions exceeded.
-
-        except (IOError, OSError):
-            print("OS ERROR")
-
-        except cx_Oracle.DatabaseError as ex:
-            LOG_loadFromView.warning("GENERAL ERROR DATABASE IN FUNCTION loadFromView")
-            LOG_loadFromView.error("ERROR MASSAGE: " + str(ex))
-        except:
-            LOG_loadFromView.error("UNEXPECTED ERROR FUNCTION loadFromView:" + str(sys.exc_info()[0]))
-"""
 
 
 # endregion Function LoadFromView
@@ -325,10 +77,6 @@ def NewMaxFILEDATE(V_MAX):
 # region Function CALLFUNC_CHECK_TOPUP_STATUS
 def CALLFUNC_CHECK_TOPUP_STATUS(v_msisdn=None, v_trace=None, v_desc=None, v_adddata=None, v_amount=0, v_rrn=None,
                                 v_capdate=None):
-    LOG_CALLFUNC_CHECK_TOPUP_STATUS = Logger(filename="__init__", level=__level__,
-                                             dirname="File-" + os.path.basename(
-                                                 __file__) + "-Func-" + sys._getframe().f_code.co_name,
-                                             rootdir=__LOGDIR__)
     P_MSISDN = v_msisdn
     P_TRACE = v_trace
     P_DESC = v_desc
@@ -661,9 +409,6 @@ def insertBefore():
 
 # region Function InsertAfter
 def insertAfter():
-    logInsertAfter = Logger(filename="__init__", level=__level__,
-                            dirname="File-" + os.path.basename(
-                                __file__) + "-Func-" + sys._getframe().f_code.co_name, rootdir=__LOGDIR__)
     try:
         global Vz_STATUS, out1, out2
         for Vi_DIAG, Vi_PSP_BIN, Vi_TERMINAL, Vi_AUT_DATE, Vi_AMOUNT, Vi_TRACE, \
@@ -936,83 +681,37 @@ def ftps_upload_file(ftp_connection, upload_file_path, rmt_dir):
 
 # endregion Function FTPS_UploadFile
 
+
+# region last_file
+def get_date(filename):
+    date_pattern = re.compile(r'\b(\d{4})(\d{2})(\d{2})\b')
+    matched = date_pattern.search(filename)
+
+    if not matched:
+        return None
+    m, d, y = map(int, matched.groups())
+    return jdatetime.date(m, d, y).togregorian()
+
+
+def lastFile(fn):
+    # arrFilename = os.listdir('780\EN TARAKONESH')
+    arrFilename = os.listdir(fn)
+    dates = (get_date(fn) for fn in arrFilename)
+    dates = (d for d in dates if d is not None)
+    last_date = max(dates)
+    # last_date = last_date.strftime('%Y-%m-%d')
+    last_j = jdatetime.datetime.fromgregorian(day=int(last_date.strftime('%d')), month=int(last_date.strftime('%m')),
+                                              year=int(last_date.strftime('%Y'))).strftime("%Y%m%d")
+    filenames = [fn for fn in arrFilename if last_j in fn]
+    for fn in filenames:
+        return fn
+
+
+# endregion last_file
+
 # region main_ut.py
 if __name__ == '__main__':
-    try:
-
-        loadConfigFile()
-        os.environ["PYTHONIOENCODING"] = "windows-1256"
-        connection780 = None
-        if __name__ == "__main__":
-            logMain = Logger(filename="__init__", level=__level__,
-                             dirname="File-" + os.path.basename(
-                                 __file__) + "-Func-" + sys._getframe().f_code.co_name, rootdir=__LOGDIR__)
-
-            try:
-                # create instances of the dbHelper connection and cursor
-                # connection780 = dbHelper.Connection(V_DB_USERNAME_780, V_DB_PASSWORD_780, V_DB_DSN_780,
-                #                                     __LOGDIR__ + '/ORA')
-                # cursor780 = connection780.cursor()
-                connection780 = cx_Oracle.connect(V_DB_USERNAME_780, V_DB_PASSWORD_780, V_DB_DSN_780)
-                cursor780 = connection780.cursor()
-
-                # create instances of the dbHelper connection and cursor
-                # connPNA = dbHelper.Connection("MAHDI", "Zz123456", "172.25.48.21:1521/ussd", __LOGDIR__ + '/ORA')
-                # connPNA = dbHelper.Connection(V_DB_USERNAME_PNA, V_DB_PASSWORD_PNA, V_DB_DSN_PNA, __LOGDIR__ + '/ORA')
-                # cursorPNA = connPNA.cursor()
-                connPNA = cx_Oracle.connect(V_DB_USERNAME_PNA, V_DB_PASSWORD_PNA, V_DB_DSN_PNA)
-                cursorPNA = connPNA.cursor()
-
-                # demonstrate that the dbHelper connection and cursor are being used
-                try:
-                    # No commit as you don-t need to commit DDL.
-                    V_NLS_LANGUAGE, = cursor780.execute("SELECT VALUE AS NLS_LANGUAGE "
-                                                        "FROM V$NLS_PARAMETERS "
-                                                        "WHERE PARAMETER = ('NLS_LANGUAGE')").fetchone()
-
-                    V_NLS_TERRITORY, = cursor780.execute("SELECT VALUE AS NLS_TERRITORY "
-                                                         "FROM V$NLS_PARAMETERS "
-                                                         "WHERE PARAMETER = ('NLS_TERRITORY')").fetchone()
-
-                    V_NLS_CHARACTERSET, = cursor780.execute("SELECT VALUE AS NLS_CHARACTERSET "
-                                                            "FROM V$NLS_PARAMETERS WHERE "
-                                                            "PARAMETER = ('NLS_CHARACTERSET')").fetchone()
-
-                    if V_NLS_LANGUAGE and V_NLS_TERRITORY and V_NLS_CHARACTERSET is not None:
-                        # export NLS_LANG=<language>_<territory>.<character set>
-                        os.environ["NLS_LANG"] = V_NLS_LANGUAGE + "." + V_NLS_TERRITORY + "." + V_NLS_CHARACTERSET
-
-                    try:
-                        loadFromView()
-                        insertBefore()
-
-                        loadFromView()
-                        insertAfter()
-
-                        compareTblAfter_AND_View()
-
-                    except Exception as ex:
-                        logMain.error("ERROR IN CALL OTHER FUNCTION IN MAIN: " + str(ex))
-
-                except Exception as e:
-                    logMain.error(traceback.format_exc() + str(e))
-
-                except:
-                    logMain.error("UNEXPECTED ERROR REGION MAIN_UT.PY #3:" + str(sys.exc_info()[0]))
-
-                # Ensure that we always disconnect from the database to avoid
-                # ORA-00018: Maximum number of sessions exceeded.
-
-            except cx_Oracle.DatabaseError as ex:
-                logMain.warning("GENERAL ERROR DATABASE IN -> REGION MAIN_UT.PY")
-                logMain.error("Error Massage: " + str(ex))
-            except Exception as e:
-                logMain.error(e)
-                logMain.error("UNEXPECTED ERROR REGION MAIN_UT.PY #2:" + str(sys.exc_info()[0]))
-
-    except RuntimeError as e:
-        logMain.error(sys.stderr.write("ERROR: %s\n" % str(e)))
-
-    except:
-        logMain.error("UNEXPECTED ERROR REGION MAIN_UT.PY #1:" + str(sys.exc_info()[0]))
+    # mergeFile(4, 9, 2021)
+    vfn = lastFile('780\EN')
+    print(vfn)
 # endregion main_ut.py

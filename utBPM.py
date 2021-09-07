@@ -7,6 +7,9 @@ import cx_Oracle
 import logging
 import sys
 from configparser import ConfigParser
+
+import strip as strip
+
 from Logger import Logger
 import os
 from ftpsClass import connect_ftp
@@ -14,14 +17,8 @@ import datetime
 import jdatetime
 
 # region Function mergeFile
-def mergeFile(fday, fmonth, fyear):
-    filename = str(jdatetime.datetime.fromgregorian(day=fday, month=fmonth, year=fyear).strftime("%Y%m%d"))
-
-    pathEN2 = os.path.abspath('780\EN\EN_581672031-' + filename + '-1.txt')
-    pathENT = os.path.abspath('780\EN TARAKONESH\EN_581672031-' + filename + '-2.txt')
-    pathOUT = os.path.abspath('780\OUT\EN_581672031-' + filename + '-1.txt')
-
-    with open(pathEN2) as file1:
+def mergeFile(pathEN, pathENT, pathOUT):
+    with open(pathEN) as file1:
         txt1 = file1.read().splitlines()
 
     with open(pathENT) as file2:
@@ -43,6 +40,66 @@ def mergeFile(fday, fmonth, fyear):
                         line_a.split("|")[8] + "|" + line_a.split("|")[9] + "|" + line_a.split("|")[10]
                         + '\n')
 
+
+def createFile(vfnOUT1):
+    # open the file for reading
+    filehandle = open(os.path.abspath(vfnOUT1), 'r')
+    while True:
+        # read a single line
+        line = filehandle.readline()
+        if not line:
+            break
+        vRRN = line.split('|')[0]
+        vDIAG = line.split('|')[1]
+        vPSP_BIN = line.split('|')[2]
+        vCAPTUREDATE = line.split('|')[3]
+        vCAPTUREDATE2 = vCAPTUREDATE[0:8]
+        vAMOUNT = line.split('|')[4]
+        vTRACE = line.split('|')[5]
+        vBANKID = line.split('|')[6]
+        vCARD = line.split('|')[7]
+        vPROCCESS_CODE = line.split('|')[8]
+        vDEVICE_TYPE = line.split('|')[9]
+        vSPLIT_COLMN = line.split('|')[10]
+        vSTATUS = line.split('|')[11]
+
+        with open('OUTMA.txt', 'a',
+                  encoding='windows-1256') as configfile:  # saveFile
+
+            # create file for bank with format shaparak.ir
+            if vSTATUS.strip() == "N":
+                ret1, ret2, ret3 = CALLFUNC_CHECK_TOPUP_STATUS(v_rrn=vRRN, v_capdate=vCAPTUREDATE2)
+                if ret1 == 0:
+                    Vz_STATUS = "C"
+                elif ret1 == 1:
+                    Vz_STATUS = "P"
+                else:
+                    Vz_STATUS = "N"
+
+                try:
+                    # global Vm_FILEMILADIDATE
+                    # Vm_FILEMILADIDATE = V_FTPS_RMT_DIR + "/" + Vi_FILEMILADIDATE
+
+                    configfile.write(
+                        vDIAG + "|" + vPSP_BIN + "|" + vCAPTUREDATE + "|" + vAMOUNT + "|" + vTRACE
+                        + "|" + vBANKID + "|" + vCARD + "|" + vPROCCESS_CODE + "|" + vDEVICE_TYPE
+                        + "|" + vSPLIT_COLMN + "|" + Vz_STATUS + "\n")
+
+                    configfile.close()
+
+                except EnvironmentError as ex:
+                    # print("ERROR IN CREATE FILE " + __confiFileName__ + " -> REGION CREATE_FILE")
+                    print("ERROR MASSAGE: " + str(ex))
+                except:
+                    print("UNEXPECTED ERROR REGION CREATE_FILE #2:" + str(sys.exc_info()[0]))
+
+            else:
+                print("NOT TAEEN VAZEYAT OR NOT -N- IN FILE")
+
+            configfile.close()
+
+    # close the pointer to that file
+    filehandle.close()
 
 # endregion Function LoadFromView
 
@@ -307,170 +364,18 @@ def insertAfter():
 
 # endregion Function InsertAfter
 
-# region Function CompareTblAfter_AND_View
-def compareTblAfter_AND_View():
-    global V_REC_VIEW
-
-    try:
-        Vtoday_FILEMILADIDATE = Vn_FILEMILADIDATE[0]
-        SQL_TBL_AFTER = """
-                        SELECT COUNT(1) 
-                        FROM USSD.ACQ_INQ_780_WITH_RRN_AFTER 
-                        WHERE FILEMILADIDATE = :TEST
-                        """
-
-        SQL_VIEW = """
-                    SELECT COUNT(1) 
-                    FROM TEHRAN_INTERNET.ACQ_INQ_780_WITH_RRN 
-                    """
-
-        # RES_SQL_TBL_AFTER = cursor780.execFetchOne(SQL_TBL_AFTER, __LOGDIR__ + '/ORA')
-        # cursor780.execArgs(SQL_TBL_AFTER, Vtoday_FILEMILADIDATE, __LOGDIR__ + '/ORA')
-        cursor780.execute(SQL_TBL_AFTER, test=Vtoday_FILEMILADIDATE)
-        RES_SQL_TBL_AFTER = cursor780.fetchall()
-
-        # RES_SQL_VIEW = cursorPNA.execFetchOne(SQL_VIEW, __LOGDIR__ + '/ORA')
-        RES_SQL_VIEW = cursorPNA.execute(SQL_VIEW).fetchone()
-
-        regex_tbl_step1 = r"([(])"
-        regex_tbl_step2 = r"([,)])"
-        matches_tbl_step1 = re.sub(regex_tbl_step1, '\n', str(RES_SQL_TBL_AFTER[0]))
-        matches_tbl_step2 = re.sub(regex_tbl_step2, '\n', matches_tbl_step1)
-        V_REC_TBL = matches_tbl_step2.replace("\n", "")
-
-        regex_view_step1 = r"([(])"
-        regex_view_step2 = r"([,)])"
-        matches_view_step1 = re.sub(regex_view_step1, '\n', str(RES_SQL_VIEW))
-        matches_view_step2 = re.sub(regex_view_step2, '\n', matches_view_step1)
-        V_REC_VIEW = matches_view_step2.replace("\n", "")
-
-        Important_single_log("Func_CompareTableAfter_AND_VIEW >> COUNT TABLE AFTER ", V_REC_TBL)
-        Important_single_log("Func_CompareTableAfter_AND_VIEW >> COUNT VIEW PNA ", V_REC_VIEW)
-
-        if V_REC_TBL == V_REC_VIEW:
-            # print("OK CompareTblAfter AND View")
-            loadFromView()
-            createFile(0)
-
-        else:
-            # print("table and view not countabddle matches")
-            logCompareTblAfter_AND_View.error("TABLE AND VIEW NOT COUNTABLE MATCHES")
-    except Exception as e:
-        logCompareTblAfter_AND_View.error("ERROR REGION FUNCTION_COMPARETBLAFTER_AND_VIEW: " + str(e))
-
-
-# endregion Function CompareTblAfter_AND_View
-
 # region loadOUTFile
-def loadFromFile():
-    # open the file for reading
-    filehandle = open(os.path.abspath('780\OUT\EN_581672031-14000613-1.txt'), 'r')
-    while True:
-        # read a single line
-        line = filehandle.readline()
-        if not line:
-            break
-        vRRN = line.split('|')[0]
-        vCAPTUREDATE = line.split('|')[3]
-        print(vRRN)
-        print(vCAPTUREDATE)
-
-    # close the pointer to that file
-    filehandle.close()
+def createFileOUT():
+    vfnEN = '780\EN\\' + lastFile('780\EN')
+    vfnENTRAN = '780\EN TARAKONESH\\' + lastFile('780\EN TARAKONESH')
+    vfnOUT1 = 'arc\\' + lastFile('780\EN')
+    try:
+        mergeFile(vfnEN, vfnENTRAN, vfnOUT1)
+        createFile(vfnOUT1)
+    except e:
+        print("error in def createFileOUT: " + e)
 
 # endregion loadOUTFile
-
-# region Function Create_Local_File
-def createFile(cntV):
-    cntV += 1
-    # region check_is_file_pna_exist
-    fileForFTP = str(Vn_FILENAME[0])
-    if os.path.isfile(__ARC__ + fileForFTP):
-        try:
-            os.remove(__ARC__ + fileForFTP)
-            createFile(1)
-        except OSError as e:
-            print("ERROR: %s - %s." % (str(e.filename), str(e.strerror)))
-    # endregion check_is_file_pna_exist
-
-    # region create_file
-    if not os.path.isfile(__ARC__ + fileForFTP):
-        try:
-            cntFile = 0
-            # region open_and_fill_file
-            for Vi_DIAG, Vi_PSP_BIN, Vi_TERMINAL, Vi_AUT_DATE, Vi_AMOUNT, Vi_TRACE, \
-                Vi_BIN_CARD, Vi_PAN, Vi_PROCCESS_CODE, Vi_DEVICE_TYPE, Vi_SPLIT_COLMN, Vi_STATUS, Vi_PKID, \
-                Vi_FILENAME, Vi_FILEDATE, Vi_INSERTDATE, Vi_RRN_DWH, Vi_FILEMILADIDATE in listforIterable:
-                cntFile += 1
-                with open(__ARC__ + str(Vn_FILENAME[0]), 'a',
-                          encoding='windows-1256') as configfile:  # saveFile
-
-                    # create file for bank with format shaparak.ir
-                    if Vi_STATUS == "N":
-                        ret1, ret2, ret3 = CALLFUNC_CHECK_TOPUP_STATUS(v_rrn=Vi_RRN_DWH, v_capdate=Vi_AUT_DATE)
-                        if ret1 == 0:
-                            Vz_STATUS = "C"
-                        elif ret1 == 1:
-                            Vz_STATUS = "P"
-                        else:
-                            Vz_STATUS = "N"
-
-                        try:
-                            global Vm_FILEMILADIDATE
-                            Vm_FILEMILADIDATE = V_FTPS_RMT_DIR + "/" + Vi_FILEMILADIDATE
-
-                            configfile.write(
-                                Vi_DIAG + "|" + Vi_PSP_BIN + "|" + Vi_TERMINAL + "|" + Vi_AUT_DATE + "|" + Vi_AMOUNT
-                                + "|" + Vi_TRACE + "|" + Vi_BIN_CARD + "|" + Vi_PAN + "|" + Vi_PROCCESS_CODE
-                                + "|" + Vi_DEVICE_TYPE + "|" + Vi_SPLIT_COLMN + "|" + Vz_STATUS + "\n")
-
-                            configfile.close()
-
-                        except EnvironmentError as ex:
-                            print("ERROR IN CREATE FILE " + __confiFileName__ + " -> REGION CREATE_FILE")
-                            print("ERROR MASSAGE: " + str(ex))
-                        except:
-                            print("UNEXPECTED ERROR REGION CREATE_FILE #2:" + str(sys.exc_info()[0]))
-
-                    else:
-                        print("NOT TAEEN VAZEYAT OR NOT -N- IN FILE")
-
-                    configfile.close()
-
-            if str(cntFile) == str(V_REC_VIEW):
-                # region send_ftp_pna
-                if __SendFTP__.upper() == 'TRUE':
-
-                    try:
-
-                        ftp_conn = connect_ftp(ftpServer=V_FTPS_SERVER, ftpPort=V_FTPS_PORT,
-                                               ftpUser=V_FTPS_USER, ftpPass=V_FTPS_PASS)
-
-                        if ftp_conn:
-                            print("Func_Create_Local_File", Vm_FILEMILADIDATE)
-                            ftps_upload_file(ftp_conn, fileForFTP, Vm_FILEMILADIDATE)
-                        else:
-                            print("NO UPLOAD FILE TO REMOTE PATH: " + V_FTPS_RMT_DIR)
-                    except Exception as e:
-                        print("ERROR: " + str(e))
-                else:
-                    print("FTP PARAMETER IS SET TO [FALSE]")
-                # endregion send_ftp_pna
-
-        except NameError as error:
-            print("ERROR MASSAGE: " + str(error))
-        except EnvironmentError as ex:
-            # parent of IOError, OSError *and* WindowsError where available
-            print("ERROR IN CREATE" + __confiFileName__ + " -> createFile()")
-            print("ERROR MASSAGE: " + str(ex))
-        except TypeError as e:
-            print("UNEXPECTED ERROR REGION CREATE_FILE TypeError: " + str(e))
-        except:
-            print("UNEXPECTED ERROR REGION CREATE_FILE #1:" + str(sys.exc_info()[0]))
-    # endregion create_file
-
-
-# endregion Function Create_Local_File
 
 # region Function FTPS_Check_directory_exists
 def directory_exists(ftp_connection, r_dir):
@@ -550,83 +455,79 @@ def lastFile(fn):
 
 # region main_ut.py
 if __name__ == '__main__':
+    __ARC__ = os.path.abspath(str('780\ArchDir'))
+    try:
+        __confiFileName__ = os.path.abspath('/cdgDir/configFile.ini')
+        __SendFTP__ = "TRUE"
+    except:
+        print("Noting variable set")
 
-    loadFromFile()
-    # loadConfigFile()
-    # try_main()
-    #
-    # try:
-    #     __confiFileName__ = os.path.abspath('/cdgDir/configFile.ini')
-    #     __SendFTP__ = "TRUE"
-    #     __ARC__ = str('/archDir')
-    # except:
-    #     print("Noting variable set")
-    #
-    # # mergeFile(4, 9, 2021)
-    # # vfn = lastFile('780\EN')
-    # # print(vfn)
-    #
-    # try:
-    #     loadConfigFile()
-    #     os.environ["PYTHONIOENCODING"] = "windows-1256"
-    #     connection780 = None
-    #     if __name__ == "__main__":
-    #         try:
-    #             connection780 = cx_Oracle.connect(V_DB_USERNAME_780, V_DB_PASSWORD_780, V_DB_DSN_780)
-    #             cursor780 = connection780.cursor()
-    #             # create instances of the dbHelper connection and cursor
-    #             connPNA = cx_Oracle.connect(V_DB_USERNAME_PNA, V_DB_PASSWORD_PNA, V_DB_DSN_PNA)
-    #             cursorPNA = connPNA.cursor()
-    #             # demonstrate that the dbHelper connection and cursor are being used
-    #             try:
-    #                 # No commit as you don-t need to commit DDL.
-    #                 V_NLS_LANGUAGE, = cursor780.execute("SELECT VALUE AS NLS_LANGUAGE "
-    #                                                     "FROM V$NLS_PARAMETERS "
-    #                                                     "WHERE PARAMETER = ('NLS_LANGUAGE')").fetchone()
-    #
-    #                 V_NLS_TERRITORY, = cursor780.execute("SELECT VALUE AS NLS_TERRITORY "
-    #                                                      "FROM V$NLS_PARAMETERS "
-    #                                                      "WHERE PARAMETER = ('NLS_TERRITORY')").fetchone()
-    #
-    #                 V_NLS_CHARACTERSET, = cursor780.execute("SELECT VALUE AS NLS_CHARACTERSET "
-    #                                                         "FROM V$NLS_PARAMETERS WHERE "
-    #                                                         "PARAMETER = ('NLS_CHARACTERSET')").fetchone()
-    #
-    #                 if V_NLS_LANGUAGE and V_NLS_TERRITORY and V_NLS_CHARACTERSET is not None:
-    #                     # export NLS_LANG=<language>_<territory>.<character set>
-    #                     os.environ["NLS_LANG"] = V_NLS_LANGUAGE + "." + V_NLS_TERRITORY + "." + V_NLS_CHARACTERSET
-    #
-    #                 try:
-    #                     # loadFromView()
-    #                     insertBefore()
-    #                     # loadFromView()
-    #                     insertAfter()
-    #
-    #                     compareTblAfter_AND_View()
-    #
-    #                 except Exception as ex:
-    #                     print("ERROR IN CALL OTHER FUNCTION IN MAIN: " + str(ex))
-    #
-    #             except Exception as e:
-    #                 print(traceback.format_exc() + str(e))
-    #
-    #             except:
-    #                 print("UNEXPECTED ERROR REGION MAIN_UT.PY #3:" + str(sys.exc_info()[0]))
-    #
-    #             # Ensure that we always disconnect from the database to avoid
-    #             # ORA-00018: Maximum number of sessions exceeded.
-    #
-    #         except cx_Oracle.DatabaseError as ex:
-    #             print("GENERAL ERROR DATABASE IN -> REGION MAIN_UT.PY")
-    #             print("Error Massage: " + str(ex))
-    #         except Exception as e:
-    #             print(e)
-    #             print("UNEXPECTED ERROR REGION MAIN_UT.PY #2:" + str(sys.exc_info()[0]))
-    #
-    # except RuntimeError as e:
-    #     print(sys.stderr.write("ERROR: %s\n" % str(e)))
-    #
-    # except:
-    #     print("UNEXPECTED ERROR REGION MAIN_UT.PY #1:" + str(sys.exc_info()[0]))
+    try:
+        # loadConfigFile()
+        os.environ["PYTHONIOENCODING"] = "windows-1256"
+        connection780 = None
+        if __name__ == "__main__":
+            try:
+                configINI = ConfigParser()
+                print(os.path.abspath('cfgDir\configFile.ini'))
+                configINI.read(os.path.abspath('cfgDir\configFile.ini'))
+
+                V_DB_USERNAME_780 = configINI.get('ORACLE_CONNECTION_780', 'dbUsername780')
+                V_DB_PASSWORD_780 = configINI.get('ORACLE_CONNECTION_780', 'dbPassword780')
+                V_DB_DSN_780 = configINI.get('ORACLE_CONNECTION_780', 'dbDSN780')
+
+                connection780 = cx_Oracle.connect(V_DB_USERNAME_780, V_DB_PASSWORD_780, V_DB_DSN_780)
+                cursor780 = connection780.cursor()
+
+                createFileOUT()
+
+                try:
+                    # No commit as you don-t need to commit DDL.
+                    V_NLS_LANGUAGE, = cursor780.execute("SELECT VALUE AS NLS_LANGUAGE "
+                                                        "FROM V$NLS_PARAMETERS "
+                                                        "WHERE PARAMETER = ('NLS_LANGUAGE')").fetchone()
+
+                    V_NLS_TERRITORY, = cursor780.execute("SELECT VALUE AS NLS_TERRITORY "
+                                                         "FROM V$NLS_PARAMETERS "
+                                                         "WHERE PARAMETER = ('NLS_TERRITORY')").fetchone()
+
+                    V_NLS_CHARACTERSET, = cursor780.execute("SELECT VALUE AS NLS_CHARACTERSET "
+                                                            "FROM V$NLS_PARAMETERS WHERE "
+                                                            "PARAMETER = ('NLS_CHARACTERSET')").fetchone()
+
+                    if V_NLS_LANGUAGE and V_NLS_TERRITORY and V_NLS_CHARACTERSET is not None:
+                        # export NLS_LANG=<language>_<territory>.<character set>
+                        os.environ["NLS_LANG"] = V_NLS_LANGUAGE + "." + V_NLS_TERRITORY + "." + V_NLS_CHARACTERSET
+
+                    try:
+                        # loadFromView()
+                        insertBefore()
+                        # loadFromView()
+                        insertAfter()
+
+                    except Exception as ex:
+                        print("ERROR IN CALL OTHER FUNCTION IN MAIN: " + str(ex))
+
+                except Exception as e:
+                    print(traceback.format_exc() + str(e))
+
+                except:
+                    print("UNEXPECTED ERROR REGION MAIN_UT.PY #3:" + str(sys.exc_info()[0]))
+
+                # Ensure that we always disconnect from the database to avoid
+                # ORA-00018: Maximum number of sessions exceeded.
+
+            except cx_Oracle.DatabaseError as ex:
+                print("GENERAL ERROR DATABASE IN -> REGION MAIN_UT.PY")
+                print("Error Massage: " + str(ex))
+            except Exception as e:
+                print(e)
+                print("UNEXPECTED ERROR REGION MAIN_UT.PY #2:" + str(sys.exc_info()[0]))
+
+    except RuntimeError as e:
+        print(sys.stderr.write("ERROR: %s\n" % str(e)))
+
+    except:
+        print("UNEXPECTED ERROR REGION MAIN_UT.PY #1:" + str(sys.exc_info()[0]))
 
 # endregion main_ut.py

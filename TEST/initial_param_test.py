@@ -3,7 +3,7 @@ prs = argparse.ArgumentParser(description='This Program Write For Undecided Tran
 
 prs.add_argument('cfg_file', action='store', help='configFile.ini path', default="cfgDir/configFile.ini")
 prs.add_argument('log_dir', action='store', help='log directory path', default="logDir/")
-prs.add_argument('arch_dir', action='store', help='archive create file directory path', default="arc/")
+prs.add_argument('arch_dir', action='store', help='archive create file directory path', default="temp/")
 prs.add_argument('send_ftp', action='store', help='send ftp input [TRUE] or [FALSE] ?', default="FALSE")
 prs.add_argument('--debug', action='store_true', help='print debug messages to stderr')
 

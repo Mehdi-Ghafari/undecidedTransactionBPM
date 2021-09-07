@@ -2,6 +2,7 @@
 # -*- coding: windows-1256 -*-
 import argparse
 import re
+import shutil
 import traceback
 import cx_Oracle
 import logging
@@ -16,7 +17,49 @@ from ftpsClass import connect_ftp
 import datetime
 import jdatetime
 
-# region Function mergeFile
+# region Function NewMaxENT
+def NewMaxENT(V_MAX):
+    config = ConfigParser()
+    config.read(os.path.abspath('cfgDir\configFile.ini'))
+    config['GENERAL']['v_max_ent'] = str(V_MAX)
+
+    try:
+        with open(__confiFileName__, 'w', encoding='windows-1256') as configfile:  # save
+            config.write(configfile)
+
+    except IndexError as ex:
+        print("ERROR MASSAGE: " + str(ex))
+
+    except EnvironmentError as ex:
+        print("Error in create" + __confiFileName__ + " -> NewMaxID()")
+        print("Error Massage: " + str(ex))
+    except:
+        print("Unexpected error:" + sys.exc_info()[0])
+
+# endregion Function NewMaxENT
+
+# region Function NewMaxEN
+def NewMaxEN(V_MAX):
+    config = ConfigParser()
+    config.read(os.path.abspath('cfgDir\configFile.ini'))
+    config['GENERAL']['v_max_en'] = str(V_MAX)
+
+    try:
+        with open(__confiFileName__, 'w', encoding='windows-1256') as configfile:  # save
+            config.write(configfile)
+
+    except IndexError as ex:
+        print("ERROR MASSAGE: " + str(ex))
+
+    except EnvironmentError as ex:
+        print("Error in create" + __confiFileName__ + " -> NewMaxID()")
+        print("Error Massage: " + str(ex))
+    except:
+        print("Unexpected error:" + sys.exc_info()[0])
+
+# endregion Function NewMaxEN
+
+# region Function MergeFile
 def mergeFile(pathEN, pathENT, pathOUT):
     with open(pathEN) as file1:
         txt1 = file1.read().splitlines()
@@ -41,7 +84,7 @@ def mergeFile(pathEN, pathENT, pathOUT):
                         + '\n')
 
 
-def createFile(vfnOUT1):
+def createFile(vfnOUT1, folder):
     # open the file for reading
     filehandle = open(os.path.abspath(vfnOUT1), 'r')
     while True:
@@ -85,7 +128,12 @@ def createFile(vfnOUT1):
                         + "|" + vBANKID + "|" + vCARD + "|" + vPROCCESS_CODE + "|" + vDEVICE_TYPE
                         + "|" + vSPLIT_COLMN + "|" + Vz_STATUS + "\n")
 
+
+                    print(vDIAG + "|" + vPSP_BIN + "|" + vCAPTUREDATE + "|" + vAMOUNT)
+
                     configfile.close()
+
+
 
                 except EnvironmentError as ex:
                     # print("ERROR IN CREATE FILE " + __confiFileName__ + " -> REGION CREATE_FILE")
@@ -98,32 +146,21 @@ def createFile(vfnOUT1):
 
             configfile.close()
 
+
     # close the pointer to that file
     filehandle.close()
 
-# endregion Function LoadFromView
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
 
-# region Function writeNewMaxFILEDATE
-def NewMaxFILEDATE(V_MAX):
-    config = ConfigParser()
-    config.read(__confiFileName__)
-    config['GENERAL']['V_MAX_FILEDATE'] = str(V_MAX)
-
-    try:
-        with open(__confiFileName__, 'w', encoding='windows-1256') as configfile:  # save
-            config.write(configfile)
-
-    except IndexError as ex:
-        print("ERROR MASSAGE: " + str(ex))
-
-    except EnvironmentError as ex:  # parent of IOError, OSError *and* WindowsError where available
-        print("Error in create" + __confiFileName__ + " -> NewMaxID()")
-        print("Error Massage: " + str(ex))
-    except:
-        print("Unexpected error:" + sys.exc_info()[0])
-
-
-# endregion Function writeNewMaxFILEDATE
+# endregion Function MergeFile
 
 # region Function CALLFUNC_CHECK_TOPUP_STATUS
 def CALLFUNC_CHECK_TOPUP_STATUS(v_msisdn=None, v_trace=None, v_desc=None, v_adddata=None, v_amount=0, v_rrn=None,
@@ -311,71 +348,36 @@ def loadConfigFile():
 
 # endregion Function LoadConfigFile
 
-# region Function InsertBefore
-def insertBefore():
-    try:
-
-        for Vi_DIAG, Vi_PSP_BIN, Vi_TERMINAL, Vi_AUT_DATE, Vi_AMOUNT, Vi_TRACE, \
-            Vi_BIN_CARD, Vi_PAN, Vi_PROCCESS_CODE, Vi_DEVICE_TYPE, Vi_SPLIT_COLMN, Vi_STATUS, Vi_PKID, \
-            Vi_FILENAME, Vi_FILEDATE, Vi_INSERTDATE, Vi_RRN_DWH, Vi_FILEMILADIDATE in listforIterable:
-            v_ret_before = CALLPROC_UNDECIDEDTRANS_INSERT_BEFORE(
-                v_diag=Vi_DIAG, v_psp_bin=Vi_PSP_BIN, v_terminal=Vi_TERMINAL, v_aut_date=Vi_AUT_DATE,
-                v_amount=Vi_AMOUNT,
-                v_trace=Vi_TRACE, v_bin_card=Vi_BIN_CARD, v_proccess_code=Vi_PROCCESS_CODE,
-                v_device_type=Vi_DEVICE_TYPE, v_split_colmn=Vi_SPLIT_COLMN, v_status=Vi_STATUS, v_pkid=Vi_PKID,
-                v_filename=Vi_FILENAME, v_filedate=Vi_FILEDATE, v_insertdate=Vi_INSERTDATE, v_rrn_dwh=Vi_RRN_DWH,
-                v_filemiladidate=Vi_FILEMILADIDATE
-            )
-
-    except Exception as e:
-        print("ERROR REGION FUNCTION_INSERTBEFORE: " + str(e))
-
-
-# endregion Function InsertBefore
-
-# region Function InsertAfter
-def insertAfter():
-    try:
-        global Vz_STATUS, out1, out2
-        for Vi_DIAG, Vi_PSP_BIN, Vi_TERMINAL, Vi_AUT_DATE, Vi_AMOUNT, Vi_TRACE, \
-            Vi_BIN_CARD, Vi_PAN, Vi_PROCCESS_CODE, Vi_DEVICE_TYPE, Vi_SPLIT_COLMN, Vi_STATUS, Vi_PKID, \
-            Vi_FILENAME, Vi_FILEDATE, Vi_INSERTDATE, Vi_RRN_DWH, Vi_FILEMILADIDATE in listforIterable:
-            if Vi_STATUS == "N":
-                ret, out1, out2 = CALLFUNC_CHECK_TOPUP_STATUS(v_rrn=Vi_RRN_DWH, v_capdate=Vi_AUT_DATE)
-                if ret == 0:
-                    Vz_STATUS = "C"
-                elif ret == 1:
-                    Vz_STATUS = "P"
-                else:
-                    Vz_STATUS = "N"
-
-            v_ret_after = CALLPROC_UNDECIDEDTRANS_INSERT_AFTER(
-                v_diag=Vi_DIAG, v_psp_bin=Vi_PSP_BIN, v_terminal=Vi_TERMINAL, v_aut_date=Vi_AUT_DATE,
-                v_amount=Vi_AMOUNT,
-                v_trace=Vi_TRACE, v_bin_card=Vi_BIN_CARD, v_proccess_code=Vi_PROCCESS_CODE,
-                v_device_type=Vi_DEVICE_TYPE, v_split_colmn=Vi_SPLIT_COLMN, v_status=Vz_STATUS, v_pkid=Vi_PKID,
-                v_filename=Vi_FILENAME, v_filedate=Vi_FILEDATE, v_insertdate=Vi_INSERTDATE, v_rrn_dwh=Vi_RRN_DWH,
-                v_filemiladidate=Vi_FILEMILADIDATE, v_out_r_reserve1=out1, v_out_r_reserve2=out2
-            )
-
-    except Exception as e:
-        logInsertAfter.error("ERROR REGION FUNCTION_INSERTAFTER: " + str(e))
-
-
-# endregion Function InsertAfter
-
-# region loadOUTFile
+# region Function loadOUTFile
 def createFileOUT():
     vfnEN = '780\EN\\' + lastFile('780\EN')
     vfnENTRAN = '780\EN TARAKONESH\\' + lastFile('780\EN TARAKONESH')
-    vfnOUT1 = 'arc\\' + lastFile('780\EN')
-    try:
-        mergeFile(vfnEN, vfnENTRAN, vfnOUT1)
-        createFile(vfnOUT1)
-    except e:
-        print("error in def createFileOUT: " + e)
 
-# endregion loadOUTFile
+    NewMaxEN(vfnEN)
+    NewMaxENT(vfnENTRAN)
+
+    folder = os.path.abspath('temp\\')
+
+    if len(os.listdir(folder)) == 0:
+        vfnOUT1 = 'temp\\' + lastFile('780\EN')
+        try:
+            mergeFile(vfnEN, vfnENTRAN, vfnOUT1)
+            createFile(vfnOUT1, folder)
+        except Exception as e:
+            print("error in def createFileOUT: " + e)
+    else:
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
+        createFileOUT()
+
+# endregion Function loadOUTFile
 
 # region Function FTPS_Check_directory_exists
 def directory_exists(ftp_connection, r_dir):
@@ -457,7 +459,7 @@ def lastFile(fn):
 if __name__ == '__main__':
     __ARC__ = os.path.abspath(str('780\ArchDir'))
     try:
-        __confiFileName__ = os.path.abspath('/cdgDir/configFile.ini')
+        __confiFileName__ = os.path.abspath('cfgDir/configFile.ini')
         __SendFTP__ = "TRUE"
     except:
         print("Noting variable set")
@@ -469,7 +471,6 @@ if __name__ == '__main__':
         if __name__ == "__main__":
             try:
                 configINI = ConfigParser()
-                print(os.path.abspath('cfgDir\configFile.ini'))
                 configINI.read(os.path.abspath('cfgDir\configFile.ini'))
 
                 V_DB_USERNAME_780 = configINI.get('ORACLE_CONNECTION_780', 'dbUsername780')
@@ -478,9 +479,6 @@ if __name__ == '__main__':
 
                 connection780 = cx_Oracle.connect(V_DB_USERNAME_780, V_DB_PASSWORD_780, V_DB_DSN_780)
                 cursor780 = connection780.cursor()
-
-                createFileOUT()
-
                 try:
                     # No commit as you don-t need to commit DDL.
                     V_NLS_LANGUAGE, = cursor780.execute("SELECT VALUE AS NLS_LANGUAGE "
@@ -500,10 +498,15 @@ if __name__ == '__main__':
                         os.environ["NLS_LANG"] = V_NLS_LANGUAGE + "." + V_NLS_TERRITORY + "." + V_NLS_CHARACTERSET
 
                     try:
+                        #createFileOUT()
                         # loadFromView()
-                        insertBefore()
+                        # insertBefore()
                         # loadFromView()
-                        insertAfter()
+                        # insertAfter()
+                        loadConfigFile()
+
+                        ftp_conn = connect_ftp(ftpServer=V_FTPS_SERVER, ftpPort=V_FTPS_PORT,
+                                               ftpUser=V_FTPS_USER, ftpPass=V_FTPS_PASS)
 
                     except Exception as ex:
                         print("ERROR IN CALL OTHER FUNCTION IN MAIN: " + str(ex))

@@ -7,13 +7,11 @@ import cx_Oracle
 import logging
 import sys
 from configparser import ConfigParser
-import dbHelper
 from Logger import Logger
 import os
 from ftpsClass import connect_ftp
 import datetime
 import jdatetime
-
 
 # region Function mergeFile
 def mergeFile(fday, fmonth, fyear):
@@ -50,10 +48,6 @@ def mergeFile(fday, fmonth, fyear):
 
 # region Function writeNewMaxFILEDATE
 def NewMaxFILEDATE(V_MAX):
-    LOG_loadFromView = Logger(filename="__init__", level=__level__,
-                              dirname="File-" + os.path.basename(
-                                  __file__) + "-Func-" + sys._getframe().f_code.co_name, rootdir=__LOGDIR__)
-
     config = ConfigParser()
     config.read(__confiFileName__)
     config['GENERAL']['V_MAX_FILEDATE'] = str(V_MAX)
@@ -63,13 +57,13 @@ def NewMaxFILEDATE(V_MAX):
             config.write(configfile)
 
     except IndexError as ex:
-        LOG_loadFromView.error("ERROR MASSAGE: " + str(ex))
+        print("ERROR MASSAGE: " + str(ex))
 
     except EnvironmentError as ex:  # parent of IOError, OSError *and* WindowsError where available
-        LOG_loadFromView.warning("Error in create" + __confiFileName__ + " -> NewMaxID()")
-        LOG_loadFromView.error("Error Massage: " + str(ex))
+        print("Error in create" + __confiFileName__ + " -> NewMaxID()")
+        print("Error Massage: " + str(ex))
     except:
-        LOG_loadFromView.error("Unexpected error:" + sys.exc_info()[0])
+        print("Unexpected error:" + sys.exc_info()[0])
 
 
 # endregion Function writeNewMaxFILEDATE
@@ -87,42 +81,20 @@ def CALLFUNC_CHECK_TOPUP_STATUS(v_msisdn=None, v_trace=None, v_desc=None, v_addd
     R_RESERVE1 = cursor780.var(str)
     R_RESERVE2 = cursor780.var(str)
 
-    if __debugMODE__.upper() == 'TRUE':
-        Important_single_log("Func_CALLFUNC_CHECK_TOPUP_STATUS ",
-                             "all income variable name "
-                             + "\n v_msisdn: " + str(P_MSISDN)
-                             + "\n v_trace: " + str(P_TRACE)
-                             + "\n v_desc: " + str(P_DESC)
-                             + "\n v_adddata: " + str(P_ADDDATA)
-                             + "\n v_amount: " + str(P_AMOUNT)
-                             + "\n v_rrn: " + str(P_RESERVE1)
-                             + "\n v_capdate: " + str(P_RESERVE2)
-                             + "\n ------------------------"
-                             )
-
     try:
         V_RET = cursor780.callfunc('USSD.CHECK_TOPUP_STATUS2', int, [P_MSISDN, P_TRACE, P_DESC, P_ADDDATA, P_AMOUNT,
                                                                      P_RESERVE1, P_RESERVE2, R_RESERVE1, R_RESERVE2])
-        if __debugMODE__.upper() == 'TRUE':
-            Important_single_log("Func_CALLFUNC_CHECK_TOPUP_STATUS ",
-                                 "all return variable name "
-                                 + "\n v_return: " + str(V_RET)
-                                 + "\n v_reserve1: " + str(R_RESERVE1.getvalue())
-                                 + "\n v_reserve2: " + str(R_RESERVE2.getvalue())
-                                 + "\n ------------------------"
-                                 )
 
         return V_RET, R_RESERVE1.getvalue(), R_RESERVE2.getvalue()
 
     except IndexError as ex:
-        LOG_CALLFUNC_CHECK_TOPUP_STATUS.error("ERROR MASSAGE: " + str(ex))
+        print("ERROR MASSAGE: " + str(ex))
 
     except cx_Oracle.DatabaseError as ex:
-        LOG_CALLFUNC_CHECK_TOPUP_STATUS.warning("GENERAL ERROR DATABASE IN -> CALLFUNC_CHECK_TOPUP_STATUS()")
-        LOG_CALLFUNC_CHECK_TOPUP_STATUS.error("ERROR MASSAGE: " + str(ex))
+        print("GENERAL ERROR DATABASE IN -> CALLFUNC_CHECK_TOPUP_STATUS()")
+        print("ERROR MASSAGE: " + str(ex))
     except:
-        LOG_CALLFUNC_CHECK_TOPUP_STATUS.error(
-            "UNEXPECTED ERROR FUNCTION -> CALLFUNC_CHECK_TOPUP_STATUS:" + str(sys.exc_info()[0]))
+        print("UNEXPECTED ERROR FUNCTION -> CALLFUNC_CHECK_TOPUP_STATUS:" + str(sys.exc_info()[0]))
         return -1
 
 
@@ -152,34 +124,6 @@ def CALLPROC_UNDECIDEDTRANS_INSERT_BEFORE(
     p_rrn_dwh = v_rrn_dwh
     p_filemiladidate = v_filemiladidate
 
-    LOG_CALLPROC_UNDECIDEDTRANS_INSERT_BEFORE = Logger(filename="__init__", level=__level__,
-                                                       dirname="File-" + os.path.basename(
-                                                           __file__) + "-Func-" + sys._getframe().f_code.co_name,
-                                                       rootdir=__LOGDIR__)
-
-    if __debugMODE__.upper() == 'TRUE':
-        Important_single_log("Func_CALLPROC_UNDECIDEDTRANS_INSERT_BEFORE ",
-                             "all income variable name "
-                             + "\n v_diag: " + str(p_diag)
-                             + "\n v_psp_bin: " + str(p_psp_bin)
-                             + "\n v_terminal: " + str(p_terminal)
-                             + "\n v_aut_date: " + str(p_aut_date)
-                             + "\n v_amount: " + str(p_amount)
-                             + "\n v_trace: " + str(p_trace)
-                             + "\n v_bin_card: " + str(p_bin_card)
-                             + "\n v_proccess_code: " + str(p_proccess_code)
-                             + "\n v_device_type: " + str(p_device_type)
-                             + "\n v_split_colmn: " + str(p_split_colmn)
-                             + "\n v_status: " + str(p_status)
-                             + "\n v_pkid: " + str(p_pkid)
-                             + "\n v_filename: " + str(p_filename)
-                             + "\n v_filedate: " + str(p_filedate)
-                             + "\n v_insertdate: " + str(p_insertdate)
-                             + "\n v_rrn_dwh: " + str(p_rrn_dwh)
-                             + "\n v_filemiladidate: " + str(p_filemiladidate)
-                             + "\n ------------------------"
-                             )
-
     try:
 
         p_rescode = cursor780.var(int)
@@ -190,25 +134,18 @@ def CALLPROC_UNDECIDEDTRANS_INSERT_BEFORE(
                             p_pkid, p_filename, p_filedate, p_insertdate, p_rrn_dwh, p_filemiladidate,
                             p_rescode, p_res_msg))
 
-        if __debugMODE__.upper() == 'TRUE':
-            Important_single_log("Func_CALLPROC_UNDECIDEDTRANS_INSERT_BEFORE ",
-                                 "all return variable name "
-                                 + "\n v_return: " + str(p_rescode.getvalue())
-                                 + "\n ------------------------"
-                                 )
-
         return p_rescode.getvalue()
 
     except IndexError as ex:
-        LOG_CALLPROC_UNDECIDEDTRANS_INSERT_BEFORE.error("ERROR MASSAGE: " + str(ex))
+        print("ERROR MASSAGE: " + str(ex))
 
     except cx_Oracle.DatabaseError as ex:
-        LOG_CALLPROC_UNDECIDEDTRANS_INSERT_BEFORE.warning("GENERAL ERROR DATABASE IN -> CALLFUNC_CHECK_TOPUP_STATUS()")
-        LOG_CALLPROC_UNDECIDEDTRANS_INSERT_BEFORE.error("ERROR MASSAGE: " + str(ex))
+        print("GENERAL ERROR DATABASE IN -> CALLFUNC_CHECK_TOPUP_STATUS()")
+        print("ERROR MASSAGE: " + str(ex))
         return -1
     except Exception as ex:
         error, = ex.args
-        LOG_CALLPROC_UNDECIDEDTRANS_INSERT_BEFORE.error(str(error))
+        print(str(error))
         return -1
 
 
@@ -241,36 +178,6 @@ def CALLPROC_UNDECIDEDTRANS_INSERT_AFTER(
     p_out_r_reserve1 = v_out_r_reserve1
     p_out_r_reserve2 = v_out_r_reserve2
 
-    LOG_CALLPROC_UNDECIDEDTRANS_INSERT_AFTER = Logger(filename="__init__", level=__level__,
-                                                      dirname="File-" + os.path.basename(
-                                                          __file__) + "-Func-" + sys._getframe().f_code.co_name,
-                                                      rootdir=__LOGDIR__)
-
-    if __debugMODE__.upper() == 'TRUE':
-        Important_single_log("Func_CALLPROC_UNDECIDEDTRANS_INSERT_AFTER ",
-                             "all income variable name "
-                             + "\n v_diag: " + str(p_diag)
-                             + "\n v_psp_bin: " + str(p_psp_bin)
-                             + "\n v_terminal: " + str(p_terminal)
-                             + "\n v_aut_date: " + str(p_aut_date)
-                             + "\n v_amount: " + str(p_amount)
-                             + "\n v_trace: " + str(p_trace)
-                             + "\n v_bin_card: " + str(p_bin_card)
-                             + "\n v_proccess_code: " + str(p_proccess_code)
-                             + "\n v_device_type: " + str(p_device_type)
-                             + "\n v_split_colmn: " + str(p_split_colmn)
-                             + "\n v_status: " + str(p_status)
-                             + "\n v_pkid: " + str(p_pkid)
-                             + "\n v_filename: " + str(p_filename)
-                             + "\n v_filedate: " + str(p_filedate)
-                             + "\n v_insertdate: " + str(p_insertdate)
-                             + "\n v_rrn_dwh: " + str(p_rrn_dwh)
-                             + "\n v_filemiladidate: " + str(p_filemiladidate)
-                             + "\n v_out_r_reserve1: " + str(p_out_r_reserve1)
-                             + "\n v_out_r_reserve2: " + str(p_out_r_reserve2)
-                             + "\n ------------------------"
-                             )
-
     try:
 
         p_rescode = cursor780.var(int)
@@ -281,13 +188,6 @@ def CALLPROC_UNDECIDEDTRANS_INSERT_AFTER(
                             p_pkid, p_filename, p_filedate, p_insertdate, p_rrn_dwh, p_filemiladidate,
                             p_out_r_reserve1, p_out_r_reserve2, p_rescode, p_res_msg))
 
-        if __debugMODE__.upper() == 'TRUE':
-            Important_single_log("Func_CALLPROC_UNDECIDEDTRANS_INSERT_AFTER ",
-                                 "all return variable name "
-                                 + "\n v_return: " + str(p_rescode.getvalue())
-                                 + "\n ------------------------"
-                                 )
-
         # logCallProc_UNDECIDEDTRANS_INSERT_AFTER.info(p_rescode.getvalue())
         # logCallProc_UNDECIDEDTRANS_INSERT_AFTER.info(p_res_msg.getvalue())
 
@@ -295,10 +195,10 @@ def CALLPROC_UNDECIDEDTRANS_INSERT_AFTER(
 
     except cx_Oracle.DatabaseError as ex:
         error, = ex.args
-        LOG_CALLPROC_UNDECIDEDTRANS_INSERT_AFTER.error(str(error))
+        print(str(error))
         return -1
     except Exception as ex:
-        LOG_CALLPROC_UNDECIDEDTRANS_INSERT_AFTER.error(str(ex))
+        print(str(ex))
         return -1
 
 
@@ -306,9 +206,6 @@ def CALLPROC_UNDECIDEDTRANS_INSERT_AFTER(
 
 # region Function LoadConfigFile
 def loadConfigFile():
-    LOG_LoadConfigFile = Logger(filename="__init__", level=__level__,
-                                dirname="File-" + os.path.basename(
-                                    __file__) + "-Func-" + sys._getframe().f_code.co_name, rootdir=__LOGDIR__)
     try:
         configINI = ConfigParser()
         configINI.read(__confiFileName__)
@@ -350,36 +247,15 @@ def loadConfigFile():
         V_MAX_FILEDATE = configINI.get('GENERAL', 'v_max_filedate')
         __debugMODE__ = configINI.get('GENERAL', 'debug_mode')
 
-        if __debugMODE__.upper() == 'TRUE':
-            V_MAX_FILEDATE = 0
-            Important_single_log("Func_loadConfigFile ",
-                                 "all income variable name "
-                                 + "\n V_DB_USERNAME_780: " + str(V_DB_USERNAME_780)
-                                 + "\n V_DB_PASSWORD_780: " + str(V_DB_PASSWORD_780)
-                                 + "\n V_DB_DSN_780: " + str(V_DB_DSN_780)
-                                 + "\n V_DB_USERNAME_PNA: " + str(V_DB_USERNAME_PNA)
-                                 + "\n V_DB_PASSWORD_PNA: " + str(V_DB_PASSWORD_PNA)
-                                 + "\n V_DB_DSN_PNA: " + str(V_DB_DSN_PNA)
-                                 + "\n V_FTPS_SERVER: " + str(V_FTPS_SERVER)
-                                 + "\n V_FTPS_PORT: " + str(V_FTPS_PORT)
-                                 + "\n V_FTPS_USER: " + str(V_FTPS_USER)
-                                 + "\n V_FTPS_PASS: " + str(V_FTPS_PASS)
-                                 + "\n V_FTPS_RMT_DIR: " + str(V_FTPS_RMT_DIR)
-                                 + "\n V_MAX_FILEDATE: " + str(V_MAX_FILEDATE)
-                                 + "\n ------------------------"
-                                 )
 
     except:
-        LOG_LoadConfigFile.error("UNEXPECTED ERROR FUNCTION loadConfigFile:" + str(sys.exc_info()[0]))
+        print("UNEXPECTED ERROR FUNCTION loadConfigFile:" + str(sys.exc_info()[0]))
 
 
 # endregion Function LoadConfigFile
 
 # region Function InsertBefore
 def insertBefore():
-    logInsertBefore = Logger(filename="__init__", level=__level__,
-                             dirname="File-" + os.path.basename(
-                                 __file__) + "-Func-" + sys._getframe().f_code.co_name, rootdir=__LOGDIR__)
     try:
 
         for Vi_DIAG, Vi_PSP_BIN, Vi_TERMINAL, Vi_AUT_DATE, Vi_AMOUNT, Vi_TRACE, \
@@ -394,15 +270,8 @@ def insertBefore():
                 v_filemiladidate=Vi_FILEMILADIDATE
             )
 
-            if __debugMODE__.upper() == 'TRUE':
-                Important_single_log("Func_insertBefore ",
-                                     "all return variable name "
-                                     + "\n v_ret_before: " + str(v_ret_before)
-                                     + "\n ------------------------"
-                                     )
-
     except Exception as e:
-        logInsertBefore.error("ERROR REGION FUNCTION_INSERTBEFORE: " + str(e))
+        print("ERROR REGION FUNCTION_INSERTBEFORE: " + str(e))
 
 
 # endregion Function InsertBefore
@@ -438,33 +307,8 @@ def insertAfter():
 
 # endregion Function InsertAfter
 
-# region Function Important_single_log
-def Important_single_log(func_name, imp_err):
-    log_important = Logger(filename="__init__", level=__level__,
-                           dirname="File-" + os.path.basename(
-                               __file__) + "-Func-" + sys._getframe().f_code.co_name, rootdir=__LOGDIR__)
-    now = datetime.datetime.now()
-
-    try:
-        dirLOGIMP = __LOGDIR__ + '/' + now.strftime("%Y-%m-%d") + '/'
-        if not os.path.exists(dirLOGIMP):
-            os.makedirs(dirLOGIMP)
-
-        with open(dirLOGIMP + "importantLOG-" + now.strftime("%Y-%m-%d") + ".log", 'a',
-                  encoding='windows-1256') as writefile:
-            writefile.write(func_name + " >> " + imp_err + "\n")
-
-    except Exception as e:
-        log_important.error(str(e))
-
-
-# endregion Function Important_single_log
-
 # region Function CompareTblAfter_AND_View
 def compareTblAfter_AND_View():
-    logCompareTblAfter_AND_View = Logger(filename="__init__", level=__level__,
-                                         dirname="File-" + os.path.basename(
-                                             __file__) + "-Func-" + sys._getframe().f_code.co_name, rootdir=__LOGDIR__)
     global V_REC_VIEW
 
     try:
@@ -519,10 +363,6 @@ def compareTblAfter_AND_View():
 
 # region Function Create_Local_File
 def createFile(cntV):
-    logcreateFile = Logger(filename="__init__", level=__level__,
-                           dirname="File-" + os.path.basename(
-                               __file__) + "-Func-" + sys._getframe().f_code.co_name, rootdir=__LOGDIR__)
-
     cntV += 1
     # region check_is_file_pna_exist
     fileForFTP = str(Vn_FILENAME[0])
@@ -531,7 +371,7 @@ def createFile(cntV):
             os.remove(__ARC__ + fileForFTP)
             createFile(1)
         except OSError as e:
-            logcreateFile.error("ERROR: %s - %s." % (str(e.filename), str(e.strerror)))
+            print("ERROR: %s - %s." % (str(e.filename), str(e.strerror)))
     # endregion check_is_file_pna_exist
 
     # region create_file
@@ -568,28 +408,15 @@ def createFile(cntV):
                             configfile.close()
 
                         except EnvironmentError as ex:
-                            # parent of IOError, OSError *and* WindowsError where available
-                            logcreateFile.warning(
-                                "ERROR IN CREATE FILE " + __confiFileName__ + " -> REGION CREATE_FILE")
-                            logcreateFile.error("ERROR MASSAGE: " + str(ex))
-
+                            print("ERROR IN CREATE FILE " + __confiFileName__ + " -> REGION CREATE_FILE")
+                            print("ERROR MASSAGE: " + str(ex))
                         except:
-                            logcreateFile.error(
-                                "UNEXPECTED ERROR REGION CREATE_FILE #2:" + str(sys.exc_info()[0]))
+                            print("UNEXPECTED ERROR REGION CREATE_FILE #2:" + str(sys.exc_info()[0]))
 
                     else:
-                        logcreateFile.error("NOT TAEEN VAZEYAT OR NOT -N- IN FILE")
+                        print("NOT TAEEN VAZEYAT OR NOT -N- IN FILE")
 
                     configfile.close()
-
-            # noinspection PySimplifyBooleanCheck
-            if __debugMODE__.upper() == 'TRUE':
-                Important_single_log("__DEBUG_MODE__", "Parameter debug is: " + str(__debugMODE__))
-                Important_single_log("__DEBUG_MODE__",
-                                     "---- count of record write to file is: " + str(cntFile) + "#FILE" + " ----")
-                Important_single_log("__DEBUG_MODE__",
-                                     "---- count of record write to file is: " + str(V_REC_VIEW) + "#VIEW" +
-                                     str(cntV) + " ----")
 
             if str(cntFile) == str(V_REC_VIEW):
                 # region send_ftp_pna
@@ -601,26 +428,26 @@ def createFile(cntV):
                                                ftpUser=V_FTPS_USER, ftpPass=V_FTPS_PASS)
 
                         if ftp_conn:
-                            Important_single_log("Func_Create_Local_File", Vm_FILEMILADIDATE)
+                            print("Func_Create_Local_File", Vm_FILEMILADIDATE)
                             ftps_upload_file(ftp_conn, fileForFTP, Vm_FILEMILADIDATE)
                         else:
-                            logcreateFile.error("NO UPLOAD FILE TO REMOTE PATH: " + V_FTPS_RMT_DIR)
+                            print("NO UPLOAD FILE TO REMOTE PATH: " + V_FTPS_RMT_DIR)
                     except Exception as e:
-                        logcreateFile.error("ERROR: " + str(e))
+                        print("ERROR: " + str(e))
                 else:
-                    logcreateFile.warning("FTP PARAMETER IS SET TO [FALSE]")
+                    print("FTP PARAMETER IS SET TO [FALSE]")
                 # endregion send_ftp_pna
 
         except NameError as error:
-            logcreateFile.error("ERROR MASSAGE: " + str(error))
+            print("ERROR MASSAGE: " + str(error))
         except EnvironmentError as ex:
             # parent of IOError, OSError *and* WindowsError where available
-            logcreateFile.warning("ERROR IN CREATE" + __confiFileName__ + " -> createFile()")
-            logcreateFile.error("ERROR MASSAGE: " + str(ex))
+            print("ERROR IN CREATE" + __confiFileName__ + " -> createFile()")
+            print("ERROR MASSAGE: " + str(ex))
         except TypeError as e:
-            logcreateFile.error("UNEXPECTED ERROR REGION CREATE_FILE TypeError: " + str(e))
+            print("UNEXPECTED ERROR REGION CREATE_FILE TypeError: " + str(e))
         except:
-            logcreateFile.error("UNEXPECTED ERROR REGION CREATE_FILE #1:" + str(sys.exc_info()[0]))
+            print("UNEXPECTED ERROR REGION CREATE_FILE #1:" + str(sys.exc_info()[0]))
     # endregion create_file
 
 
@@ -628,9 +455,6 @@ def createFile(cntV):
 
 # region Function FTPS_Check_directory_exists
 def directory_exists(ftp_connection, r_dir):
-    log_ftps_dir_exists = Logger(filename="__init__", level=__level__,
-                                 dirname="File-" + os.path.basename(
-                                     __file__) + "-Func-" + sys._getframe().f_code.co_name, rootdir=__LOGDIR__)
     # in current location
     filelist = []
     ftp_connection.retrlines('LIST', filelist.append)
@@ -638,7 +462,7 @@ def directory_exists(ftp_connection, r_dir):
         if f.split()[-1] == r_dir and f.upper().startswith('D'):
             return True
         else:
-            Important_single_log("Func_Directory_Exists ", "ERROR FUNCTION DIR_EXISTS: " + str(f.upper()))
+            print("Func_Directory_Exists ", "ERROR FUNCTION DIR_EXISTS: " + str(f.upper()))
             return True
     return False
 
@@ -651,7 +475,7 @@ def ftps_chdir(ftp_connection, dir):
     if directory_exists(ftp_connection, dir) is False:  # (or negate, whatever you prefer for readability)
         ftp_connection.mkd(dir)
     else:
-        Important_single_log("Func_FTPS_Chdir", str(dir) + " IS EXISTS")
+        print("Func_FTPS_Chdir", str(dir) + " IS EXISTS")
     ftp_connection.cwd(dir)
 
 
@@ -659,9 +483,6 @@ def ftps_chdir(ftp_connection, dir):
 
 # region Function FTPS_UploadFile
 def ftps_upload_file(ftp_connection, upload_file_path, rmt_dir):
-    log_ftps_upload_file = Logger(filename="__init__", level=__level__,
-                                  dirname="File-" + os.path.basename(
-                                      __file__) + "-Func-" + sys._getframe().f_code.co_name, rootdir=__LOGDIR__)
     try:
         # ftp_connection.set_pasv(False)
 
@@ -676,11 +497,10 @@ def ftps_upload_file(ftp_connection, upload_file_path, rmt_dir):
         upload_file1.close()
         # print('Upload finished.')
     except Exception as e:
-        log_ftps_upload_file.error("Error REGION FUNCTION_FTPS_UPLOAD_FILE: " + str(e))
+        print("Error REGION FUNCTION_FTPS_UPLOAD_FILE: " + str(e))
 
 
-# endregion Function FTPS_UploadFile
-
+# endregion Function FTPS_UploadFil
 
 # region last_file
 def get_date(filename):
@@ -711,7 +531,82 @@ def lastFile(fn):
 
 # region main_ut.py
 if __name__ == '__main__':
+
+    loadConfigFile()
+    try_main()
+
+    try:
+        __confiFileName__ = os.path.abspath('/cdgDir/configFile.ini')
+        __SendFTP__ = "TRUE"
+        __ARC__ = str('/archDir')
+    except:
+        print("Noting variable set")
+
     # mergeFile(4, 9, 2021)
-    vfn = lastFile('780\EN')
-    print(vfn)
+    # vfn = lastFile('780\EN')
+    # print(vfn)
+
+    try:
+        loadConfigFile()
+        os.environ["PYTHONIOENCODING"] = "windows-1256"
+        connection780 = None
+        if __name__ == "__main__":
+            try:
+                connection780 = cx_Oracle.connect(V_DB_USERNAME_780, V_DB_PASSWORD_780, V_DB_DSN_780)
+                cursor780 = connection780.cursor()
+                # create instances of the dbHelper connection and cursor
+                connPNA = cx_Oracle.connect(V_DB_USERNAME_PNA, V_DB_PASSWORD_PNA, V_DB_DSN_PNA)
+                cursorPNA = connPNA.cursor()
+                # demonstrate that the dbHelper connection and cursor are being used
+                try:
+                    # No commit as you don-t need to commit DDL.
+                    V_NLS_LANGUAGE, = cursor780.execute("SELECT VALUE AS NLS_LANGUAGE "
+                                                        "FROM V$NLS_PARAMETERS "
+                                                        "WHERE PARAMETER = ('NLS_LANGUAGE')").fetchone()
+
+                    V_NLS_TERRITORY, = cursor780.execute("SELECT VALUE AS NLS_TERRITORY "
+                                                         "FROM V$NLS_PARAMETERS "
+                                                         "WHERE PARAMETER = ('NLS_TERRITORY')").fetchone()
+
+                    V_NLS_CHARACTERSET, = cursor780.execute("SELECT VALUE AS NLS_CHARACTERSET "
+                                                            "FROM V$NLS_PARAMETERS WHERE "
+                                                            "PARAMETER = ('NLS_CHARACTERSET')").fetchone()
+
+                    if V_NLS_LANGUAGE and V_NLS_TERRITORY and V_NLS_CHARACTERSET is not None:
+                        # export NLS_LANG=<language>_<territory>.<character set>
+                        os.environ["NLS_LANG"] = V_NLS_LANGUAGE + "." + V_NLS_TERRITORY + "." + V_NLS_CHARACTERSET
+
+                    try:
+                        # loadFromView()
+                        insertBefore()
+                        # loadFromView()
+                        insertAfter()
+
+                        compareTblAfter_AND_View()
+
+                    except Exception as ex:
+                        print("ERROR IN CALL OTHER FUNCTION IN MAIN: " + str(ex))
+
+                except Exception as e:
+                    print(traceback.format_exc() + str(e))
+
+                except:
+                    print("UNEXPECTED ERROR REGION MAIN_UT.PY #3:" + str(sys.exc_info()[0]))
+
+                # Ensure that we always disconnect from the database to avoid
+                # ORA-00018: Maximum number of sessions exceeded.
+
+            except cx_Oracle.DatabaseError as ex:
+                print("GENERAL ERROR DATABASE IN -> REGION MAIN_UT.PY")
+                print("Error Massage: " + str(ex))
+            except Exception as e:
+                print(e)
+                print("UNEXPECTED ERROR REGION MAIN_UT.PY #2:" + str(sys.exc_info()[0]))
+
+    except RuntimeError as e:
+        print(sys.stderr.write("ERROR: %s\n" % str(e)))
+
+    except:
+        print("UNEXPECTED ERROR REGION MAIN_UT.PY #1:" + str(sys.exc_info()[0]))
+
 # endregion main_ut.py

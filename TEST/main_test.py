@@ -2,8 +2,8 @@ import os
 
 
 def mergeFile():
-    pathEN2 = os.path.abspath('780\EN\EN_581672031-14000613-1.txt')
-    pathENT = os.path.abspath('780\EN TARAKONESH\EN_581672031-14000613-2.txt')
+    pathEN2 = os.path.abspath('../780/EN/EN_581672031-14000613-1.txt')
+    pathENT = os.path.abspath('../780/EN TARAKONESH/EN_581672031-14000613-2.txt')
     pathOUT = os.path.abspath('780\OUT\outSAMPLE.txt')
 
     with open(pathEN2) as file1:

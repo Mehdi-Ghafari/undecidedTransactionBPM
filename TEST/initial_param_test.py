@@ -21,5 +21,4 @@ except:
 logMain = Logger(filename="main_init", level=__level__,
                  dirname="File-" + os.path.basename(__file__), rootdir=__LOGDIR__)
 
-
 # endregion Initial_Param

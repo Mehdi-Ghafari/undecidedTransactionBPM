@@ -1,26 +1,16 @@
 # region try_main
+import cx_Oracle
+
 try:
 
-    loadConfigFile()
+
     os.environ["PYTHONIOENCODING"] = "windows-1256"
     connection780 = None
     if __name__ == "__main__":
-        logMain = Logger(filename="__init__", level=__level__,
-                         dirname="File-" + os.path.basename(
-                             __file__) + "-Func-" + sys._getframe().f_code.co_name, rootdir=__LOGDIR__)
-
         try:
-            # create instances of the dbHelper connection and cursor
-            # connection780 = dbHelper.Connection(V_DB_USERNAME_780, V_DB_PASSWORD_780, V_DB_DSN_780,
-            #                                     __LOGDIR__ + '/ORA')
-            # cursor780 = connection780.cursor()
             connection780 = cx_Oracle.connect(V_DB_USERNAME_780, V_DB_PASSWORD_780, V_DB_DSN_780)
             cursor780 = connection780.cursor()
 
-            # create instances of the dbHelper connection and cursor
-            # connPNA = dbHelper.Connection("MAHDI", "Zz123456", "172.25.48.21:1521/ussd", __LOGDIR__ + '/ORA')
-            # connPNA = dbHelper.Connection(V_DB_USERNAME_PNA, V_DB_PASSWORD_PNA, V_DB_DSN_PNA, __LOGDIR__ + '/ORA')
-            # cursorPNA = connPNA.cursor()
             connPNA = cx_Oracle.connect(V_DB_USERNAME_PNA, V_DB_PASSWORD_PNA, V_DB_DSN_PNA)
             cursorPNA = connPNA.cursor()
 

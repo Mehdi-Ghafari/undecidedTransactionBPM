@@ -2,7 +2,7 @@ import jdatetime
 import re
 import os
 
-arrFilename = os.listdir('780\EN TARAKONESH')
+arrFilename = os.listdir('../780/EN TARAKONESH')
 date_pattern = re.compile(r'\b(\d{4})(\d{2})(\d{2})\b')
 
 def get_date(filename):

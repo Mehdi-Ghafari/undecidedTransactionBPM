@@ -4,21 +4,22 @@ import ssl
 import os
 import socket
 
-prs = argparse.ArgumentParser(description='usage')
-prs.add_argument('ip', action='store', help='ftp server ip address')
-prs.add_argument('port', action='store', help='ftp server port')
-prs.add_argument('ftp_user', action='store', help='ftp server username')
-prs.add_argument('ftp_pass', action='store', help='ftp server password')
-prs.add_argument('local_pathFile', action='store', help='local path For uploadFile')
-prs.add_argument('local_uploadFile', action='store', help='local Filename For uploadFile')
-prs.add_argument('rmt_dir', action='store', help='Change Remote Directory')
-args = prs.parse_args()
+# prs = argparse.ArgumentParser(description='usage')
+# prs.add_argument('ip', action='store', help='ftp server ip address')
+# prs.add_argument('port', action='store', help='ftp server port')
+# prs.add_argument('ftp_user', action='store', help='ftp server username')
+# prs.add_argument('ftp_pass', action='store', help='ftp server password')
+# prs.add_argument('local_pathFile', action='store', help='local path For uploadFile')
+# prs.add_argument('local_uploadFile', action='store', help='local Filename For uploadFile')
+# prs.add_argument('rmt_dir', action='store', help='Change Remote Directory')
+# args = prs.parse_args()
 
-server = args.ip
-ftplib.FTP_PORT = int(args.port)
-user = args.ftp_user
-passwd = args.ftp_pass
-PathFile = args.local_pathFile
+# server = args.ip
+server = '172.30.23.26'
+ftplib.FTP_PORT = 21
+user = 'mahdi.gh@780.ir'
+passwd = 'Zz12345678'
+PathFile = '/'
 _SSLSocket = ssl.SSLSocket
 
 

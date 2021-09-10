@@ -7,7 +7,6 @@ import cx_Oracle
 import logging
 import sys
 from configparser import ConfigParser
-import dbHelper
 from Logger import Logger
 import os
 from ftpsClass import connect_ftp

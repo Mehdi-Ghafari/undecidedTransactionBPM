@@ -1,16 +1,22 @@
+import socket
+import sys
 from ftplib import FTP_TLS
-ftps = FTP_TLS('172.30.23.26')
-# login anonymously before securing control channel
+
+ftps = FTP_TLS(timeout=15)
+ftps.set_debuglevel(2)
+ftps.connect('172.30.23.26', 21)
 ftps.login('mahdi.gh@780.ir', 'Zz12345678')
-# switch to secure data connection.. IMPORTANT!
-# Otherwise, only the user and password is encrypted and not all the file data.
+ftps.set_pasv(True)
 ftps.prot_p()
-ftps.retrlines('LIST')
 
-filename = '14000615.Batch'
-print ('Opening local file ' + filename)
-myfile = open(filename, 'wb')
+ftps.cwd('/EN')
+ftps.retrlines('NLST')
 
-ftps.retrbinary('RETR %s' % filename, myfile.write)
+# the name of file you want to download from the FTP server
+filename = "EN_581672031-14000107-1.txt"
+with open(filename, "wb") as file:
+    # use FTP's RETR command to download the file
+    ftps.retrbinary(f"RETR {filename}", file.write)
 
+ftps.quit()
 ftps.close()

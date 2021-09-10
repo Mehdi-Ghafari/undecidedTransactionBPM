@@ -121,7 +121,7 @@ def connect_ftp(ftpServer, ftpPort, ftpUser, ftpPass):
     ftp.set_debuglevel(False)
     # ftp.set_debuglevel(2)
     # print(ftp.debugging)
-    # ftp.set_pasv(False)
+    ftp.set_pasv(True)
     # ftp.connect(server, 990)
     # ftp.auth()
     try:

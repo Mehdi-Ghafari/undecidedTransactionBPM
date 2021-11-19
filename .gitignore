@@ -109,3 +109,8 @@ fabric.properties
 .idea/codestream.xml
 
 # End of https://www.toptal.com/developers/gitignore/api/jetbrains
+.idea/misc.xml
+.idea/modules.xml
+*.iml
+*.xml
+*.pyc
